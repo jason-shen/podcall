@@ -1,14 +1,17 @@
 # PodCall - a remote interview recording app.
 
+## No install, no server, no fees, no cables, just 2 smartphones and 1 internet :-)
+
 ## Features
-1) Simple - send a link your guest opens on their smartphone
-2) You focus on your interview
+1) Simple - creates a link which you send to your guest and they open it on their smartphone
+2) You focus on your interview, using your android phone or laptop
 3) FREE + opensource
 4) Audio quality is better than PSTN, skype, Zoom etc 
 5) Recording is premixed into stereo for easy editing 
 6) All done in the browser no app to download or install for your guest - or you
 
 ### NOTE - This is BETA quality software, it might break, lose your recordings, frighten your cat etc...
+Please let me know of any problems.
 
 ## Requirements
 ### Host needs to use Chrome (on a laptop or Android).
@@ -42,6 +45,10 @@ Just before the interview I'll send you a link.
 When you get it please open it on your Smartphone. Click 'Accept' to take the call and agree to the dropdown to 
 asking for access your microphone, place the phone somewhere comfortable, adjust the speaker volume and just talk. (The mic symbol mutes/unmutes your microphone, the square ends the call). You can use earbuds/headset/airpods if you like.
 
+## Known problems:
+1) host side only works in chrome on android/laptop 
+2) real phone calls can interrupt the recording - ask a guest to reject any calls _quickly_
+3) facebook and gmail apps have built in browsers that don't support the features we need. Ask the guest to select 'open in chrome(/safari)' if you send links over gmail or FB messenger.
 
 Enjoy! 
 
