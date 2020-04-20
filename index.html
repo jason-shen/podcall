@@ -81,7 +81,7 @@
             </div>
             <div class="modal-body">
                 <p>Unfortunately the browser you are using does not support WebRTC.</p>
-                <p>Please retry using Safari, Chrome, FireFox, Edge - or pretty much any modern browser</p>
+                <p>Please retry using Safari on iOS, Chrome on Android, FireFox on Android, or pretty much any modern browser on a laptop.</p>
             </div>
             <div class="modal-footer">
                 <button id="sadder" type="button" class="btn btn-secondary" data-dismiss="modal" >Accept</button>
@@ -99,6 +99,25 @@
                 <p>Unfortunately the browser you are using does not support the media recorder API.</p>
                 <p>Please try hosting the call with Chrome or FireFox or Edge.</p>
                 <p>Your guest can use any modern browser</p>
+            </div>
+            <div class="modal-footer">
+                <button id="sad" type="button" class="btn btn-secondary" data-dismiss="modal" >Accept</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="facebookapp" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sorry</h5>
+            </div>
+            <div class="modal-body">
+                <p>Unfortunately the Facebook apps block webRTC.</p>
+                <p>Please try hosting the call with Chrome or FireFox or Edge.</p>
+                <p>Go to <pre>https://pipe.github.io/podcall</pre> outside the Facebook or instagram app.</p>
+                <p>You may be able to do this from the three dot menu on the top right of your screen.</p>
+                <p>Your guest can use any modern browser e.g. Chrome or FireFox or Edge or Safari</p>
             </div>
             <div class="modal-footer">
                 <button id="sad" type="button" class="btn btn-secondary" data-dismiss="modal" >Accept</button>
@@ -144,7 +163,7 @@ websocketURL: "wss://pi.pe/websocket/?finger=" // where to find the redezvous se
     var startRecTime = 0;
     var lastLoss = 0;
     var lastRecv =0;
-    var softstereo = false;
+    var softstereo = true;
     var join;
 
 
@@ -345,11 +364,18 @@ websocketURL: "wss://pi.pe/websocket/?finger=" // where to find the redezvous se
             document.getElementById("them").srcObject = stream;
             var peer = myac.createMediaStreamSource(stream);
             if (initiator) {
-                let splityou = myac.createChannelSplitter(2); // 2 outputs L and R
-                peer.connect(splityou);
-                splityou.connect(join,1,1);
+                if (softstereo){
+                    let panyou = myac.createStereoPanner();
+                    panyou.pan.value = +0.3;
+                    peer.connect(panyou)
+                    panyou.connect(dcomp);
+                } else {
+                    let splityou = myac.createChannelSplitter(2); // 2 outputs L and R
+                    peer.connect(splityou);
+                    splityou.connect(join, 1, 1);
+                    // join already connected to dcomp
+                }
 
-                // join already connected to dcomp
                 var recStream = myac.createMediaStreamDestination();
                 recorder = new MediaRecorder(recStream.stream);
                 dcomp.connect(recStream);
@@ -463,11 +489,18 @@ function setupAudio() {
                 localStream = stream;
                 if (initiator) {
                     let node = myac.createMediaStreamSource(stream);
-                    let splitme = myac.createChannelSplitter(2); // 2 outputs L and R
-                    join = myac.createChannelMerger(2); // nominally 2 inputs L and R
-                    node.connect(splitme);
-                    splitme.connect(join,0,0)
-                    join.connect(dcomp);
+                    if (softstereo){
+                        let panme = myac.createStereoPanner();
+                        panme.pan.value = -0.3;
+                        node.connect(panme);
+                        panme.connect(dcomp);
+                    } else {
+                        let splitme = myac.createChannelSplitter(2); // 2 outputs L and R
+                        join = myac.createChannelMerger(2); // nominally 2 inputs L and R
+                        node.connect(splitme);
+                        splitme.connect(join, 0, 0)
+                        join.connect(dcomp);
+                    }
                 }
                 if (pc.addTrack) {
                     stream.getTracks().forEach(track => {
@@ -605,8 +638,18 @@ function _addSourceToVideo(element, type, dataURI) {
         });
         videoEl.play();
     }
+function isFacebookApp() {
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf('Instagram') > -1) ;
+}
+function isWebrtcSupported() {
+    // tip of the hat to Janus for this test :
+    // https://groups.google.com/forum/#!topic/meetecho-janus/lRjYn0C9BYU
+    // it should detect the horrible mess that is chrome on ios
+    // and various other ugly captives....
 
-
+    return ('RTCPeerConnection' in window) && ("mediaDevices" in navigator) && ("getUserMedia" in navigator.mediaDevices);
+};
     // some housekeeping
 
     $.extend({
@@ -630,11 +673,21 @@ function _addSourceToVideo(element, type, dataURI) {
         $("#chosenAction").hide();
         $("#packetLoss").hide();
         $("#statsZone").hide();
-        if (window.RTCPeerConnection){
-            $("#mute").click(_ => setMute(!mute));
-            setRole();
+        if (isFacebookApp()){
+            $("#status").text("Facebook apps block webrtc in their 'browser' ");
+            $("#facebookapp").show();
+            console.log("UGH, facebook. !");
         } else {
-            $('#nowebrtc').modal('show');
+            if (isWebrtcSupported()) {
+                console.log("I see webRTC !");
+                $("#status").text("Have webRTC available ");
+                $("#mute").click(_ => setMute(!mute));
+                setRole();
+            } else {
+                console.log("I don't see webRTC !");
+                $("#status").text("Dont have webRTC available ");
+                $('#nowebrtc').modal('show');
+            }
         }
 
 
