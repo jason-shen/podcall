@@ -1,6 +1,5 @@
 **PodCall**
 
-New text
 
 PodCall - an app to remotely record interviews
 
